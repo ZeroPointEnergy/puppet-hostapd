@@ -19,8 +19,29 @@ class hostapd (
   $start          = true,
   $bssids         = {},
 ) {
-  class{'hostapd::install':} ->
-  class{'hostapd::config':} ~>
-  class{'hostapd::service':} ->
-  Class['hostapd']
+  class{'hostapd::install':} -> Class['hostapd']
+  Class['hostapd'] ~> class{'hostapd::service':}
+
+  concat {'hostapd.conf': 
+    path   => '/etc/hostapd/hostapd.conf',
+    owner  => root,
+    group  => root,
+    mode   => '0600',
+  }
+
+  concat::fragment {'hostapd.conf':
+    target  => 'hostapd.conf',
+    content => template('hostapd/hostapd.conf.erb'),
+    order   => '01',
+  }
+
+  validate_hash($::hostapd::bssids)
+  create_resources(hostapd::bssid, $::hostapd::bssids)
+
+  shellvar { 'DAEMON_CONF':
+    ensure => present,
+    target => '/etc/default/hostapd',
+    value  => '/etc/hostapd/hostapd.conf',
+  }
+
 }

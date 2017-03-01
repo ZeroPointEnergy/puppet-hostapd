@@ -21,7 +21,9 @@ define hostapd::bssid(
   Hostapd::Bssid[$title] ~>
   Class['hostapd::service']
 
-  concat_fragment { "hostapd.conf+02_${bss}":
+  concat::fragment { "hostapd_bss_${bss}":
+    target  => 'hostapd.conf',
     content => template('hostapd/bssid.erb', 'hostapd/hostapd.conf.erb'),
+    order   => "02_${bss}",
   }
 }
